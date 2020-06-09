@@ -28,11 +28,30 @@ class MainWindow:
                 # Creating heading label      (row 0)
                 # Creating instructions label (row 1)
                 self.heading_label = Label(self.main_frame,
-                                           width=800, height=20, bg='white',
+                                           width=80, bg='pink',
                                            text='Hangman Game',
-                                           font='Arial 24 bold',pady=10,
+                                           font='Arial 16 bold',pady=10,
                                            padx=10)
                 self.heading_label.grid(row=0)
+
+                self.instructions_label = Label(self.main_frame, width=80,
+                                                bg='red', text='<instructions>',
+                                                font='Arial 12',
+                                                pady=10, padx=10)
+                self.instructions_label.grid(row=1)
+
+
+                # Buttons frame (row 2)
+                self.buttons_frame = Frame(self.main_frame, pady=10, padx=10, bg='green')
+                self.buttons_frame.grid(row=3)
+
+
+                # Buttons
+                # Import Wordlist (row 1, collumn 0)
+                # Random phrase (row 0, collumn 1)
+                # Chosesn phrase (row 2, collumn 0)
+                # Game History  (row 1, collumn 2)
+
 
 
 
