@@ -8,6 +8,7 @@ from tkinter import *
 from functools import partial
 import random
 import time
+import numpy
 
 class MainWindow:
         def __init__(self,partner):
@@ -42,7 +43,8 @@ class MainWindow:
 
 
                 # Buttons frame (row 2)
-                self.buttons_frame = Frame(self.main_frame, pady=10, padx=10, bg='green')
+                self.buttons_frame = Frame(self.main_frame, pady=10, padx=10,
+                                           bg='green')
                 self.buttons_frame.grid(row=3)
 
 
@@ -51,6 +53,14 @@ class MainWindow:
                 # Random phrase (row 0, collumn 1)
                 # Chosesn phrase (row 2, collumn 0)
                 # Game History  (row 1, collumn 2)
+                self.import_button = Button(self.buttons_frame,
+                                            pady=10, padx=10, bg='white',
+                                            text='Import Wordlist' ,
+                                            font='Arial 10')
+
+                #self.random_button
+                #self.chosen_button
+                #self.history_button
 
 
 
