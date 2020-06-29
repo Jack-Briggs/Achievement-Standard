@@ -6,9 +6,11 @@
 
 from tkinter import *
 from functools import partial
-import random
-import time
-import numpy
+#import random
+#import time
+#import numpy
+import glob
+import os
 
 class MainWindow:
         def __init__(self,partner):
@@ -101,8 +103,14 @@ class MainWindow:
 class WordlistWindow:
         def __init__(self,partner,wordlist):
 
-                # Running import def
-                self.import_wordlists()
+                # Running import def / Defining variables
+                self.file_path = os.path.dirname(os.path.realpath(__file__))
+                self.lists_dict = {}
+
+
+                # Running import definition
+                self.import_wordlists(file_path)
+
 
                 # Creating window
                 self.wordlist_box = Toplevel()
@@ -129,8 +137,7 @@ class WordlistWindow:
 
                 # If there is no wordlist selected display this instead.
                 if not wordlist:
-                        self.instructions_label.configure(self.wordlist_frame,
-                                                          font='Arial 10', text=
+                        self.instructions_label.configure(text=
 '''You have not yet selected a list of phrases for the game to use! Press the buttons below to select the list of phrases for the game to use when selecting a word. If you would like to add more lists then add text files to the same folder as the program, formatted in the same way as the other lists.''' )
 
 
@@ -150,9 +157,26 @@ class WordlistWindow:
                 partner.wordlist_button.config(state=NORMAL)
                 self.wordlist_box.destroy()
 
-        def import_wordlist(self,wordlists):
+        def import_wordlists(self,file_path):
 
                 # For each text file in the directory of the program read it.
+                file_path =  "r"+str(self.file_path)+"/*.txt"
+                for filename in glob.glob(file_path):
+                        with open(filename) as f:
+
+                                # Create a dictionary with the first row as key,
+                                # then a list of the remaining lines as values.
+                                # Update this dictionary for each file.
+                                temp_list = []
+                                rows = [row for row in f]
+                                header = rows[0]
+                                header = header.strip()
+                                rows = rows[1:]
+                                self.lists_dict[header] = ''
+                                for i in rows:
+                                        temp_list.append(i.strip())
+                                self.lists_dict[header] = temp_list
+                print(self.lists_dict)
 
 
 class HistoryWindow:
