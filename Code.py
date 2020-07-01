@@ -98,18 +98,17 @@ class MainWindow:
         def game_window(self):
                 GameWindow(self)
 
-        #def get_wordlist(self)
 
 class WordlistWindow:
         def __init__(self,partner,wordlist):
 
-                # Running import def / Defining variables
+                # Definging variables and gathering the directory of the program
                 self.file_path = os.path.dirname(os.path.realpath(__file__))
                 self.lists_dict = {}
 
 
                 # Running import definition
-                self.import_wordlists(file_path)
+                self.import_wordlists(self.file_path)
 
 
                 # Creating window
@@ -135,10 +134,21 @@ class WordlistWindow:
                 self.instructions_label.grid(row=0)
 
 
-                # If there is no wordlist selected display this instead.
+                # Display the current wordlist for the program (row-1)
+                self.display_label = Label(self.wordlist_frame, font='Arial 10',
+                                           fg='red', text='Current Wordlist:'+
+                                           str(wordlist), pady=10, bg='white')
+                self.display_label.grid(row=1)
+
+
+                # If there is no wordlist selected change instructions message.
+                # Also change the 'selected wordlist' label to 'None' instead
+                # of []
                 if not wordlist:
                         self.instructions_label.configure(text=
 '''You have not yet selected a list of phrases for the game to use! Press the buttons below to select the list of phrases for the game to use when selecting a word. If you would like to add more lists then add text files to the same folder as the program, formatted in the same way as the other lists.''' )
+                        self.display_label.configure(text=
+'''Current Wordlist: None''')
 
 
                 # Deleting the window when the X is pressed
@@ -146,10 +156,47 @@ class WordlistWindow:
                                            (self.close_wordlist,partner))
 
 
-                # GUI Frame for imported lists
+                # GUI Frame for imported lists (row=2)
                 self.wordlist_import_frame = Frame(self.wordlist_frame, width=
-                                                   800, height=800, pady=10)
-                self.wordlist_import_frame.grid(row=0)
+                                                   600, height=600, pady=10)
+                self.wordlist_import_frame.grid(row=2)
+
+
+                # For each wordlist add a button to the GUI
+                # Get the keynames for each list
+                rownum=0
+                self.button_identities = []
+                self.keynames = []
+                for i in range(len(self.lists_dict.keys())):
+                        # creating the buttons, assigning a unique argument (i) to run the function (find_button)
+                        button = Button(self.wordlist_import_frame, width=60, text=str([key for key in self.lists_dict.keys()][i]), command=partial(self.find_button, i))
+                        rownum+=1
+                        button.grid(row=rownum)
+                        # add the button's identity to a list:
+                        self.button_identities.append(button)
+
+
+        def find_button(self,n):
+
+                # Function to get the index and identity of each button (bname)
+                # So that I can figure out which one was pressed.
+                keynames = []
+                for key in self.lists_dict.keys():
+                        keynames.append(key)
+                bname = (self.button_identities[n])
+                bname.configure(text = "clicked")
+                self.wordlist_key=keynames[n]
+
+                self.select_wordlist()
+
+
+        def select_wordlist(self):
+
+                # Select the corresponding list from the key
+                if self.wordlist_key in self.lists_dict.keys():
+                        self.wordlist = self.lists_dict[self.wordlist_key]
+                print(self.wordlist)
+
 
         def close_wordlist(self,partner):
 
@@ -160,7 +207,8 @@ class WordlistWindow:
         def import_wordlists(self,file_path):
 
                 # For each text file in the directory of the program read it.
-                file_path =  "r"+str(self.file_path)+"/*.txt"
+                # Making the program only use text files in the file path.
+                file_path = str(self.file_path)+"/*.txt"
                 for filename in glob.glob(file_path):
                         with open(filename) as f:
 
@@ -176,7 +224,9 @@ class WordlistWindow:
                                 for i in rows:
                                         temp_list.append(i.strip())
                                 self.lists_dict[header] = temp_list
-                print(self.lists_dict)
+
+                # Returns the dict when called
+                return self.lists_dict
 
 
 class HistoryWindow:
@@ -222,3 +272,4 @@ if __name__ == "__main__":
         root.title("Hangman Game")
         something = MainWindow(root)
         root.mainloop()
+
