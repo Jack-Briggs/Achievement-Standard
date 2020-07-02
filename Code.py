@@ -6,7 +6,7 @@
 
 from tkinter import *
 from functools import partial
-#import random
+from random import randint
 #import time
 #import numpy
 import glob
@@ -16,7 +16,6 @@ class MainWindow:
         def __init__(self,partner):
 
                 # Setting variables
-                self.wordlist = []
                 self.phrase = ''
                 self.letters = []
                 self.guesses = 10
@@ -57,9 +56,9 @@ class MainWindow:
                 # Chosesn phrase      (row 0, column 3)
                 self.wordlist_button = Button(self.buttons_frame, pady=10,
                                             padx=10, bg='white',
-                                            text='Import Wordlist',
-                                            font='Arial 10', command= lambda:
-                                            self.wordlist_window(self.wordlist))
+                                            text='Select Wordlist',
+                                            font='Arial 10', command=
+                                            self.wordlist_window)
                 self.wordlist_button.grid(row=0,column=0,padx=25)
 
                 self.history_button = Button(self.buttons_frame, pady=10,
@@ -83,24 +82,34 @@ class MainWindow:
                                             self.game_information)
                 self.chosen_button.grid(row=0,column=3,padx=25)
 
-        def wordlist_window(self,wordlist):
-                WordlistWindow(self,wordlist)
+        def wordlist_window(self):
+                WordlistWindow(self)
 
         def history_window(self):
                 HistoryWindow(self)
 
         def game_information(self):
 
+                print(self.get_wordlist())
+
                 # If the user has not selected a wordlist prompt them to do so
-                if not self.wordlist:
-                        WordlistWindow(self,self.wordlist)
+                if not WordlistWindow.wordlist:
+                        WordlistWindow(self)
 
         def game_window(self):
                 GameWindow(self)
 
+        def get_wordlist(self):
+                return WordlistWindow.wordlist
+
+
 
 class WordlistWindow:
-        def __init__(self,partner,wordlist):
+
+        wordlist = []
+        wordlist_key = ''
+
+        def __init__(self,partner):
 
                 # Definging variables and gathering the directory of the program
                 self.file_path = os.path.dirname(os.path.realpath(__file__))
@@ -123,6 +132,8 @@ class WordlistWindow:
 
                 # Disabling wordlist window button on main window
                 partner.wordlist_button.config(state=DISABLED)
+                partner.random_button.config(state=DISABLED)
+                partner.chosen_button.config(state=DISABLED)
 
 
                 # Creating label for instructions (row=0)
@@ -136,15 +147,15 @@ class WordlistWindow:
 
                 # Display the current wordlist for the program (row-1)
                 self.display_label = Label(self.wordlist_frame, font='Arial 10',
-                                           fg='red', text='Current Wordlist:'+
-                                           str(wordlist), pady=10, bg='white')
+                                           fg='red', text='Current Wordlist: '+
+                                           str(WordlistWindow.wordlist_key), pady=10, bg='white')
                 self.display_label.grid(row=1)
 
 
                 # If there is no wordlist selected change instructions message.
                 # Also change the 'selected wordlist' label to 'None' instead
                 # of []
-                if not wordlist:
+                if not WordlistWindow.wordlist:
                         self.instructions_label.configure(text=
 '''You have not yet selected a list of phrases for the game to use! Press the buttons below to select the list of phrases for the game to use when selecting a word. If you would like to add more lists then add text files to the same folder as the program, formatted in the same way as the other lists.''' )
                         self.display_label.configure(text=
@@ -180,28 +191,44 @@ class WordlistWindow:
 
                 # Function to get the index and identity of each button (bname)
                 # So that I can figure out which one was pressed.
+                # Get the names of each wordlist
                 keynames = []
                 for key in self.lists_dict.keys():
                         keynames.append(key)
-                bname = (self.button_identities[n])
-                bname.configure(text = "clicked")
-                self.wordlist_key=keynames[n]
 
+
+                # Checks which button was pressed and disabled it
+                # Enables all other buttons
+                if bname := (self.button_identities[n]):
+                        bname.config(state=DISABLED)
+                        for bname in self.button_identities:
+                                if bname in self.button_identities and bname != (self.button_identities[n]):
+                                        bname.config(state=NORMAL)
+
+
+                # Saving the wordlist name that corresponded to the button
+                # that was pressed.
+                # Running selecting function.
+                WordlistWindow.wordlist_key=keynames[n]
                 self.select_wordlist()
 
 
         def select_wordlist(self):
 
                 # Select the corresponding list from the key
-                if self.wordlist_key in self.lists_dict.keys():
-                        self.wordlist = self.lists_dict[self.wordlist_key]
-                print(self.wordlist)
+                # Change the label to display the chosen list.
+                if WordlistWindow.wordlist_key in self.lists_dict.keys():
+                        WordlistWindow.wordlist = self.lists_dict[WordlistWindow.wordlist_key]
+                        self.display_label.configure(text='Current Wordlist: '+str(WordlistWindow.wordlist_key))
+
 
 
         def close_wordlist(self,partner):
 
                 # Re-enabling wordlist button and closing window.
                 partner.wordlist_button.config(state=NORMAL)
+                partner.chosen_button.config(state=NORMAL)
+                partner.random_button.config(state=NORMAL)
                 self.wordlist_box.destroy()
 
         def import_wordlists(self,file_path):
@@ -227,7 +254,6 @@ class WordlistWindow:
 
                 # Returns the dict when called
                 return self.lists_dict
-
 
 class HistoryWindow:
         def __init__(self,partner):
