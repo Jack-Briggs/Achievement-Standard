@@ -13,12 +13,15 @@ import glob
 import os
 
 class MainWindow:
+
+        word = ''
+        characters = []
+
         def __init__(self,partner):
 
                 # Setting variables
-                self.phrase = ''
-                self.letters = []
-                self.guesses = 10
+                self.allowed_characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ '
+
 
                 # Creating the frame for the window
                 self.main_frame = Frame(width=1024, height=728, bg='white',
@@ -72,14 +75,14 @@ class MainWindow:
                                             padx=10, bg='white',
                                             text='Random Word',
                                             font='Arial 10', command=
-                                            self.game_information)
+                                            self.random_word)
                 self.random_button.grid(row=0,column=2,padx=25)
 
                 self.chosen_button = Button(self.buttons_frame, pady=10,
                                             padx=10, bg='white',
                                             text='Chosen Word',
                                             font='Arial 10', command=
-                                            self.game_information)
+                                            self.chosen_word_window)
                 self.chosen_button.grid(row=0,column=3,padx=25)
 
         def wordlist_window(self):
@@ -88,19 +91,91 @@ class MainWindow:
         def history_window(self):
                 HistoryWindow(self)
 
-        def game_information(self):
+        def game_window(self):
+                GameWindow(self)
+
+        def chosen_word_window(self):
+
+                # Create entry box
+                self.entry_box = Toplevel()
+
+
+                # Entry Frame
+                self.entry_frame = Frame(self.entry_box,width=40,height=40)
+                self.entry_frame.grid()
+
+
+                # Entry Label
+                self.entry_label = Label(self.entry_frame,text='Enter a Word',
+                                         font='Arial 12',padx=20,pady=20)
+                self.entry_label.grid(row=0)
+
+
+                # Entry sub-frame
+                self.entry_sub_frame = Frame(self.entry_frame,
+                                             width=20,height=40)
+                self.entry_sub_frame.grid(row=1)
+
+
+                # Entry window
+                self.word_entry = Entry(self.entry_sub_frame,text='Enter a Word'
+                                        ,font='Arial 12')
+                self.word_entry.grid(row=0,pady=10,padx=5)
+
+
+                # Confirm button
+                self.confirm_button = Button(self.entry_sub_frame,text='Confirm'
+                                             ,font='Arial 12',
+                                             command=self.chosen_word)
+                self.confirm_button.grid(row=1,pady=10)
+
+        def random_word(self):
 
                 print(self.get_wordlist())
 
                 # If the user has not selected a wordlist prompt them to do so
                 if not WordlistWindow.wordlist:
                         WordlistWindow(self)
+                else:
+                        # Pick a random word from the wordlist to use for the game
+                        self.word = self.get_wordlist()
+                        self.word = self.word[randint(0,len(self.get_wordlist())-1)]
 
-        def game_window(self):
-                GameWindow(self)
+
+                        # Get the letters and start the game
+                        self.characters = [char for char in self.word]
+                        self.game_window()
+
+        def chosen_word(self):
+
+                # Get the word from the entry and split it into characters
+                MainWindow.word = self.word_entry.get()
+                MainWindow.characters = [char for char in self.word]
+
+
+                # If the entry is not alphabetical ask for another entry.
+                if all(char in self.allowed_characters for char in MainWindow.word):
+
+                        # Remove the window and start the game
+                        self.entry_box.protocol('WM_DELETE_WINDOW')
+                        self.entry_box.destroy()
+                        self.game_window()
+
+                else:
+
+                        self.entry_label.configure(text='Enter a word',fg='red')
 
         def get_wordlist(self):
                 return WordlistWindow.wordlist
+
+        def get_wordlist_key(self):
+                return WordlistWindow.wordlist_key
+
+        def get_word(self):
+                return MainWindow.word
+
+        def get_characters(self):
+                return MainWindow.characters
 
 
 
