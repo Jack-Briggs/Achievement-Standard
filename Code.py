@@ -7,6 +7,7 @@
 from tkinter import *
 from functools import partial
 from random import randint
+from PIL import Image, ImageTk
 #import time
 #import numpy
 import glob
@@ -138,12 +139,12 @@ class MainWindow:
                         WordlistWindow(self)
                 else:
                         # Pick a random word from the wordlist to use for the game
-                        self.word = self.get_wordlist()
-                        self.word = self.word[randint(0,len(self.get_wordlist())-1)]
+                        MainWindow.word = self.get_wordlist()
+                        MainWindow.word = self.word[randint(0,len(self.get_wordlist())-1)]
 
 
                         # Get the letters and start the game
-                        self.characters = [char for char in self.word]
+                        MainWindow.characters = [char for char in self.word]
                         self.game_window()
 
         def chosen_word(self):
@@ -171,10 +172,10 @@ class MainWindow:
         def get_wordlist_key(self):
                 return WordlistWindow.wordlist_key
 
-        def get_word(self):
+        def get_word():
                 return MainWindow.word
 
-        def get_characters(self):
+        def get_characters():
                 return MainWindow.characters
 
 
@@ -351,15 +352,72 @@ class HistoryWindow:
 class GameWindow:
         def __init__(self,partner):
 
-                # Temp window
+                # Vars
+                self.temp_guesses = '10'
+                self.temp_time = '30 Seconds'
+
+                # Game Box
                 self.game_box = Toplevel()
-                self.game_frame = Frame(self.game_box,width=400,height=400,bg='white')
+
+
+                # Game Frame
+                self.game_frame = Frame(self.game_box,width=800,height=800,
+                                        bg='white')
                 self.game_frame.grid()
-                self.temp_label = Label(self.game_frame,font='Arial 10',text='temp')
-                self.temp_label.grid(row=0)
+
+
+                # Heading label (row 0)
+                self.game_heading_label = Label(self.game_frame,font='Arial 10',text='temp')
+                self.game_heading_label.grid(row=0)
+
+
+                # Hangman picture (row 1)
+                self.img = ImageTk.PhotoImage(Image.open("test.png"))
+                self.game_image = Label(self.game_frame,image=self.img)
+                self.game_image.grid(row=1)
+
+
+                # Display label (Phrase the game is using) (row 2)
+                self.word_label = Label(self.game_frame,font='Arial 20',text=
+                                        ['_' for i in MainWindow.get_word()],
+                                        bg='black',fg='white')
+                self.word_label.grid(row=2)
+
+
+                # Guesses used label (row 3, column 0)
+                self.guesses_label = Label(self.game_frame,font='Arial 10',text=
+                                           self.temp_guesses)
+                self.guesses_label.grid(row=3,column=0)
+
+
+                # Time taken label (row 3 column 1)
+                self.time_label = Label(self.game_frame,font='Arial 10',text=
+                                        self.temp_time)
+                self.time_label.grid(row=3,column=1)
+
+
+                # Entry box (row 3, column 2)
+                self.entry_box = Entry(self.game_frame,font='ARial 10',text='.')
+                self.entry_box.grid(row=3,column=2)
+
+
+                # Alphabet buttons frame (row 4)
+
+
+                # Alphabet buttons
+
+
+                # Guessed letters area (Game Frame, row 5)
+
+
+                # Disabling menu buttons
                 partner.chosen_button.config(state=DISABLED)
                 partner.random_button.config(state=DISABLED)
-                self.game_box.protocol('WM_DELETE_WINDOW',partial(self.close_game,partner))
+
+
+                # Deleting window when X is pressed
+                self.game_box.protocol('WM_DELETE_WINDOW',partial(
+                                        self.close_game,partner))
 
 
         def close_game(self,partner):
