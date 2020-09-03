@@ -69,7 +69,7 @@ class MainWindow:
                                              padx=10, bg='white',
                                              text='Game History',
                                              font='Arial 10', command=
-                                             self.history_window)
+                                             self.gamestats_window)
                 self.history_button.grid(row=0,column=1,padx=25)
 
                 self.random_button = Button(self.buttons_frame, pady=10,
@@ -89,8 +89,17 @@ class MainWindow:
         def wordlist_window(self):
                 WordlistWindow(self)
 
-        def history_window(self):
-                HistoryWindow(self)
+        def gamestats_window(self):
+
+                # Check if there are any statistics, if no games have been
+                # played tell the user and don't open the window.
+
+                test = GameWindow.get_games()
+                if len(test) >0:
+                        GameStatistics(self)
+
+                else:
+                        self.instructions_label.configure(text='You have not played any games!\nThere are no statistics avaliable.')
 
         def game_window(self):
                 GameWindow(self)
@@ -172,10 +181,10 @@ class MainWindow:
         def get_wordlist_key(self):
                 return WordlistWindow.wordlist_key
 
-        def get_word():
+        def get_word(self):
                 return MainWindow.word
 
-        def get_characters():
+        def get_characters(self):
                 return MainWindow.characters
 
 
@@ -331,24 +340,6 @@ class WordlistWindow:
                 # Returns the dict when called
                 return self.lists_dict
 
-class HistoryWindow:
-        def __init__(self,partner):
-
-                # Temp window
-                self.history_box = Toplevel()
-                self.history_frame = Frame(self.history_box,width=400,height=400,bg='white')
-                self.history_frame.grid()
-                self.temp_label = Label(self.history_frame,font='Arial 10',text='temp')
-                self.temp_label.grid(row=0)
-                partner.history_button.config(state=DISABLED)
-                self.history_box.protocol('WM_DELETE_WINDOW',partial(self.close_history,partner))
-
-
-        def close_history(self,partner):
-
-                partner.history_button.config(state=NORMAL)
-                self.history_box.destroy()
-
 class GameWindow:
 
         games = []
@@ -447,10 +438,10 @@ class GameWindow:
                 wrd_chars = MainWindow.get_characters()
 
                 # Variables for game stats
-                self.game_num = 1
-                self.time_taken = 30
-                self.guesses_used = 7
-                self.win_loss = 'Win'
+                self.game_num = 0
+                self.time_taken = 0
+                self.guesses_used = 0
+                self.win_loss = ''
                 self.phrase = MainWindow.get_word()
                 self.game_stats = []
 
@@ -502,7 +493,7 @@ class GameWindow:
                                         bname.config(state=DISABLED)
 
                                 # If they lost
-                                self.lost_game()
+                                self.win_loss = 'Loss'
 
                 else:
                         # Disable the buttons on game end
@@ -510,8 +501,24 @@ class GameWindow:
                                 bname.config(state=DISABLED)
 
                         # if they win
-                        self.won_game()
+                        self.win_loss = 'Win'
 
+                # Save the stats for this game
+                self.game_num += 1
+                self.time_taken = 0
+                self.guesses_used = 10-self.temp_guesses
+
+                self.game_stats.append(str(self.game_num))
+                self.game_stats.append(self.phrase)
+                self.game_stats.append(self.win_loss)
+                self.game_stats.append(str(self.time_taken))
+                self.game_stats.append(str(self.guesses_used))
+
+                self.games.append(self.game_stats)
+                GameWindow.games = self.games
+
+        def get_games(self):
+                return GameWindow.games
 
         def close_game(self,partner):
 
@@ -522,22 +529,8 @@ class GameWindow:
 class GameStatistics:
         def __init__(self,partner):
 
-                # vars
-                #self.game_num = 1
-                #self.time_taken = 30
-                #self.guesses_used = 7
-                #self.win_loss = 'Win'
-                #self.phrase = 'Testing'
-                #self.game_stats = []
-                #self.games = []
-                #self.game_stats.append(str(self.game_num))
-                #self.game_stats.append(self.phrase)                              # ALL OF THESE VARS WILL BE RETURN VALUES OF ANOTHER CLASS/DEF
-                #self.game_stats.append(self.win_loss)
-                #self.game_stats.append(str(self.time_taken))
-                #self.game_stats.append(str(self.guesses_used))
-                #self.games.append(tuple(self.game_stats))  # ['Game '+ str(GameWindow.get_game_num)] GAME NUM WILL BE RETURN VALUE OF ANOTHER CLASS/DEF
+                #self.games = [['1','Tomato','Win','20','5'],['2','Orange','Loss','70','6']]
 
-                self.games = [['1','Tomato','Win','20','5'],['2','Orange','Loss','70','6']]
 
                 # Master Frame
                 self.master_frame = Frame()
