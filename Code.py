@@ -144,14 +144,14 @@ class MainWindow:
 
 
                         # Get the letters and start the game
-                        MainWindow.characters = [char for char in self.word]
+                        MainWindow.characters = [char for char in self.word.lower()]
                         self.game_window()
 
         def chosen_word(self):
 
                 # Get the word from the entry and split it into characters
                 MainWindow.word = self.word_entry.get()
-                MainWindow.characters = [char for char in self.word]
+                MainWindow.characters = [char for char in self.word.lower()]
 
 
                 # If the entry is not alphabetical ask for another entry.
@@ -350,14 +350,20 @@ class HistoryWindow:
                 self.history_box.destroy()
 
 class GameWindow:
+
+        games = []
+
         def __init__(self,partner):
 
                 # Vars
-                self.temp_guesses = '10'
+                self.temp_guesses = 9
                 self.temp_time = '30'
                 self.guessed_letters = []
-                self.word_letters = []
+                self.word_letters = MainWindow.get_characters()
+                self.guessed_word_letters = ['_' for i in MainWindow.get_word()]
                 self.letter = ''
+                self.letters = ['a','b','c','d','e','f','g','h','i','j','k','l','m',
+                           'n','o','p','q','r','s','t','u','v','w','x','y','z']
 
                 # Game Box
                 self.game_box = Toplevel()
@@ -377,7 +383,7 @@ class GameWindow:
 
                 # Display label (Phrase the game is using) (row 1)
                 self.word_label = Label(self.game_frame,font='Arial 20',text=
-                                        ['_' for i in MainWindow.get_word()])
+                                        self.guessed_word_letters)
                 self.word_label.grid(row=1)
 
 
@@ -388,7 +394,7 @@ class GameWindow:
 
                 # Guesses used label (row 0, column 0)
                 self.guesses_label = Label(self.info_frame,font='Arial 10',text="Guesses remaining: "+
-                                           self.temp_guesses)
+                                           str(self.temp_guesses+1))
                 self.guesses_label.grid(row=0)
 
 
@@ -398,75 +404,113 @@ class GameWindow:
                 self.time_label.grid(row=0,column=1)
 
 
-                # Entry frame (row 3)
-                self.entry_frame = Frame(self.game_frame)
-                self.entry_frame.grid(row=3)
-
-
-                # Entry box (row 0, column 0)
-                self.entry_box = Entry(self.entry_frame,font='Arial 10',text='.')
-                self.entry_box.grid(row=0)
-
-
-                # Alphabet buttons frame (row 4)
+                # Alphabet buttons frame (row 3)
+                self.alphabet_frame = Frame(self.game_frame)
+                self.alphabet_frame.grid(row=3)
                 # For each letter add a button to the GUI
                 # Get the keynames for each list
                 rownum=0
                 columnnum=0
                 self.button_identities = []
                 self.keynames = []
-                for i in range(len(self.lists_dict.keys())):
+                for i in self.letters:
                         # creating the buttons, assigning a unique argument (i) to run the function (find_button)
-                        button = Button(self.wordlist_import_frame, width=60, text=str([key for key in self.lists_dict.keys()][i]), command=partial(self.find_button, i))
-                        rownum+=1
+                        button = Button(self.alphabet_frame, width=6, text=str([letter for letter in self.letters][self.letters.index(i)]), command=partial(self.run_checks, i))
                         button.grid(row=rownum,column=columnnum)
+                        columnnum+=1
+                        if columnnum >= 13:
+                                columnnum = 0
+                                rownum+=1
                         # add the button's identity to a list:
                         self.button_identities.append(button)
 
 
-                        # Guessed letters area (Game Frame, row 5)
+                # Guessed letters area (Game Frame, row 4)
+                self.guessed_label = Label(self.game_frame,text='',font='Aral 10',pady=10)
+                self.guessed_label.grid(row=4)
 
 
-                        # Disabling menu buttons
-                        partner.chosen_button.config(state=DISABLED)
-                        partner.random_button.config(state=DISABLED)
+                # Disabling menu buttons
+                partner.chosen_button.config(state=DISABLED)
+                partner.random_button.config(state=DISABLED)
 
 
-                        # Deleting window when X is pressed
-                        self.game_box.protocol('WM_DELETE_WINDOW',partial(
-                                                self.close_game,partner))
+                # Deleting window when X is pressed
+                self.game_box.protocol('WM_DELETE_WINDOW',partial(
+                                        self.close_game,partner))
 
 
-        def find_button(self,n):
+        def run_checks(self,n):
 
-                letters = ['a','b','c','d','e','f','g','h','i','j','k','l','m',
-                           'n','o','p','q','r','s','t','u','v','w','x','y','z']
+                # Defining some variables
+                indices = []
+                wrd_chars = MainWindow.get_characters()
 
-                # Function to get the index and identity of each button (bname)
-                # So that I can figure out which one was pressed.
-                # Get the names of each wordlist
-                # Checks which button was pressed and disabled it
-                # Enables all other buttons
-                if bname := (self.button_identities[n]):
+                # Variables for game stats
+                self.game_num = 1
+                self.time_taken = 30
+                self.guesses_used = 7
+                self.win_loss = 'Win'
+                self.phrase = MainWindow.get_word()
+                self.game_stats = []
+
+
+                # Checks which button was pressed, stores the letter assigned,
+                # disables the button and checks if the letter is in the word,
+                # if the letter is in the word continue
+                if bname := (self.button_identities[self.letters.index(n)]):
+                        letter = n
                         bname.config(state=DISABLED)
-                        for bname in self.button_identities:
-                                if bname in self.button_identities and bname != (self.button_identities[n]):
-                                        bname.config(state=NORMAL)
 
 
-                # Saving the wordlist name that corresponded to the button
-                # that was pressed.
-                # Running selecting function.
-                self.letter=letters[n]
-                if self.letter in self.guessed_letters:
-                        bname.config(state=DISABLED)
-                elif self.letter in self.word_letters:
-                        #SHOW IT ON THE DISPLAY
+                        # Get the index positions of the letter in the word
+                        for i in range(len(wrd_chars)):
+                                if wrd_chars[i] == letter:
+                                        indices.append(i)
+
+
+                        # Replace the hidden letters on the display with
+                        # correctly guessed letters
+                        for p in indices:
+                                self.guessed_word_letters[p] = letter
+                                self.word_label.configure(text=self.guessed_word_letters)
+
+
+                # Adding the guessed letter to a list
+                # Updating the label
+                self.guessed_letters.append(letter)
+                self.guessed_label.configure(text='Letters Guessed:\n'+str(self.guessed_letters))
+
+                # check if the player has won
+                # if the player has guesses, lower the guesses by 1
+                # update the image coresponding to the guess
+
+                if '_' in self.guessed_word_letters:
+
+                        # If the user has guesses subtract one
+                        if self.temp_guesses >0:
+                                self.temp_guesses -= 1
+                                self.guesses_label.configure(text=self.temp_guesses+1)
+
+                        # if the user has no more guesses end the game,
+                        elif self.temp_guesses == 0:
+                                self.temp_guesses = 0
+                                self.guesses_label.configure(text=self.temp_guesses)
+
+                                # disable the buttons on game end
+                                for bname in self.button_identities:
+                                        bname.config(state=DISABLED)
+
+                                # If they lost
+                                self.lost_game()
+
                 else:
-                        self.guessed_letters.append(self.
+                        # Disable the buttons on game end
+                        for bname in self.button_identities:
+                                bname.config(state=DISABLED)
 
-
-
+                        # if they win
+                        self.won_game()
 
 
         def close_game(self,partner):
@@ -474,6 +518,94 @@ class GameWindow:
                 partner.chosen_button.config(state=NORMAL)
                 partner.random_button.config(state=NORMAL)
                 self.game_box.destroy()
+
+class GameStatistics:
+        def __init__(self,partner):
+
+                # vars
+                #self.game_num = 1
+                #self.time_taken = 30
+                #self.guesses_used = 7
+                #self.win_loss = 'Win'
+                #self.phrase = 'Testing'
+                #self.game_stats = []
+                #self.games = []
+                #self.game_stats.append(str(self.game_num))
+                #self.game_stats.append(self.phrase)                              # ALL OF THESE VARS WILL BE RETURN VALUES OF ANOTHER CLASS/DEF
+                #self.game_stats.append(self.win_loss)
+                #self.game_stats.append(str(self.time_taken))
+                #self.game_stats.append(str(self.guesses_used))
+                #self.games.append(tuple(self.game_stats))  # ['Game '+ str(GameWindow.get_game_num)] GAME NUM WILL BE RETURN VALUE OF ANOTHER CLASS/DEF
+
+                self.games = [['1','Tomato','Win','20','5'],['2','Orange','Loss','70','6']]
+
+                # Master Frame
+                self.master_frame = Frame()
+                self.master_frame.grid()
+
+                # Info Label
+                self.info_label = Label(self.master_frame,font='Arial 12',text='This is the statistics screen, it will display the games for the session.\nClick the buttons to re-order your games based on that setting.')
+                self.info_label.grid(row=1)
+
+                #S Sorting Buttons Frame
+                self.sorting_buttons_frame = Frame(self.master_frame)
+                self.sorting_buttons_frame.grid(row=2)
+
+                # Sorting Buttons
+                self.phrase_button = Button(self.sorting_buttons_frame,font='Arial 12',text='Phrase',command=self.sort_word)
+                self.phrase_button.grid(row=0, column=0)
+
+                self.win_loss_button = Button(self.sorting_buttons_frame,font='Arial 12',text='Win / Loss',command=self.sort_winloss)
+                self.win_loss_button.grid(row=0, column=1)
+
+                self.time_button = Button(self.sorting_buttons_frame,font='Arial 12',text='Time Taken',command=self.sort_time)
+                self.time_button.grid(row=0, column=2)
+
+                self.guesses_button = Button(self.sorting_buttons_frame,font='Arial 12',text='Guesses Used',command=self.sort_guesses)
+                self.guesses_button.grid(row=0, column=3)
+
+                # Stats Frame
+                self.statistics_frame = Frame(self.master_frame)
+                self.statistics_frame.grid(row=3)
+
+                # Displaying Games
+                rownum = 0
+                for game in self.games:
+                        self.game_label = Label(self.statistics_frame,font='Arial 10',text=(sorted(self.games, key=lambda values: values[0])[rownum]))
+                        self.game_label.grid(row=rownum)
+                        rownum += 1
+
+        def sort_word(self):
+                self.game_label.destroy
+                rownum = 0
+                for game in self.games:
+                        self.game_label = Label(self.statistics_frame,font='Arial 10',text=(sorted(self.games, key=lambda values: values[1])[rownum]))
+                        self.game_label.grid(row=rownum)
+                        rownum += 1
+
+        def sort_winloss(self):
+                self.game_label.destroy
+                rownum = 0
+                for game in self.games:
+                        self.game_label = Label(self.statistics_frame,font='Arial 10',text=(sorted(self.games, key=lambda values: values[2],reverse=True)[rownum]))
+                        self.game_label.grid(row=rownum)
+                        rownum += 1
+
+        def sort_time(self):
+                self.game_label.destroy
+                rownum = 0
+                for game in self.games:
+                        self.game_label = Label(self.statistics_frame,font='Arial 10',text=(sorted(self.games, key=lambda values: values[3])[rownum]))
+                        self.game_label.grid(row=rownum)
+                        rownum += 1
+
+        def sort_guesses(self):
+                self.game_label.destroy
+                rownum = 0
+                for game in self.games:
+                        self.game_label = Label(self.statistics_frame,font='Arial 10',text=(sorted(self.games, key=lambda values: values[4])[rownum]))
+                        self.game_label.grid(row=rownum)
+                        rownum += 1
 
 if __name__ == "__main__":
         root = Tk()
