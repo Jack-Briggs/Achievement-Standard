@@ -15,9 +15,6 @@ import os
 
 class MainWindow:
 
-        word = ''
-        characters = []
-
         def __init__(self,partner):
 
                 # Setting variables
@@ -94,8 +91,7 @@ class MainWindow:
                 # Check if there are any statistics, if no games have been
                 # played tell the user and don't open the window.
 
-                test = GameWindow.get_games()
-                if len(test) >0:
+                if len(InfoDump().get_games()) >0:
                         GameStatistics(self)
 
                 else:
@@ -141,30 +137,28 @@ class MainWindow:
 
         def random_word(self):
 
-                print(self.get_wordlist())
-
                 # If the user has not selected a wordlist prompt them to do so
-                if not WordlistWindow.wordlist:
+                if not InfoDump.wordlist:
                         WordlistWindow(self)
                 else:
                         # Pick a random word from the wordlist to use for the game
-                        MainWindow.word = self.get_wordlist()
-                        MainWindow.word = self.word[randint(0,len(self.get_wordlist())-1)]
+                        InfoDump.word = InfoDump().get_wordlist()
+                        InfoDump.word = InfoDump.word[randint(0,len(InfoDump().get_wordlist())-1)]
 
 
                         # Get the letters and start the game
-                        MainWindow.characters = [char for char in self.word.lower()]
+                        InfoDump.characters = [char for char in InfoDump.word.lower()]
                         self.game_window()
 
         def chosen_word(self):
 
                 # Get the word from the entry and split it into characters
-                MainWindow.word = self.word_entry.get()
-                MainWindow.characters = [char for char in self.word.lower()]
+                InfoDump.word = self.word_entry.get()
+                InfoDump.characters = [char for char in InfoDump.word.lower()]
 
 
                 # If the entry is not alphabetical ask for another entry.
-                if all(char in self.allowed_characters for char in MainWindow.word):
+                if all(char in self.allowed_characters for char in InfoDump.word):
 
                         # Remove the window and start the game
                         self.entry_box.protocol('WM_DELETE_WINDOW')
@@ -175,24 +169,9 @@ class MainWindow:
 
                         self.entry_label.configure(text='Enter a word',fg='red')
 
-        def get_wordlist(self):
-                return WordlistWindow.wordlist
-
-        def get_wordlist_key(self):
-                return WordlistWindow.wordlist_key
-
-        def get_word(self):
-                return MainWindow.word
-
-        def get_characters(self):
-                return MainWindow.characters
-
 
 
 class WordlistWindow:
-
-        wordlist = []
-        wordlist_key = ''
 
         def __init__(self,partner):
 
@@ -233,14 +212,14 @@ class WordlistWindow:
                 # Display the current wordlist for the program (row-1)
                 self.display_label = Label(self.wordlist_frame, font='Arial 10',
                                            fg='red', text='Current Wordlist: '+
-                                           str(WordlistWindow.wordlist_key), pady=10, bg='white')
+                                           str(InfoDump.wordlist_key), pady=10, bg='white')
                 self.display_label.grid(row=1)
 
 
                 # If there is no wordlist selected change instructions message.
                 # Also change the 'selected wordlist' label to 'None' instead
                 # of []
-                if not WordlistWindow.wordlist:
+                if not InfoDump.wordlist:
                         self.instructions_label.configure(text=
 '''You have not yet selected a list of phrases for the game to use! Press the buttons below to select the list of phrases for the game to use when selecting a word. If you would like to add more lists then add text files to the same folder as the program, formatted in the same way as the other lists.''' )
                         self.display_label.configure(text=
@@ -294,7 +273,7 @@ class WordlistWindow:
                 # Saving the wordlist name that corresponded to the button
                 # that was pressed.
                 # Running selecting function.
-                WordlistWindow.wordlist_key=keynames[n]
+                InfoDump.wordlist_key=keynames[n]
                 self.select_wordlist()
 
 
@@ -302,9 +281,9 @@ class WordlistWindow:
 
                 # Select the corresponding list from the key
                 # Change the label to display the chosen list.
-                if WordlistWindow.wordlist_key in self.lists_dict.keys():
-                        WordlistWindow.wordlist = self.lists_dict[WordlistWindow.wordlist_key]
-                        self.display_label.configure(text='Current Wordlist: '+str(WordlistWindow.wordlist_key))
+                if InfoDump.wordlist_key in self.lists_dict.keys():
+                        InfoDump.wordlist = self.lists_dict[InfoDump.wordlist_key]
+                        self.display_label.configure(text='Current Wordlist: '+str(InfoDump.wordlist_key))
 
 
 
@@ -342,16 +321,14 @@ class WordlistWindow:
 
 class GameWindow:
 
-        games = []
-
         def __init__(self,partner):
 
                 # Vars
                 self.temp_guesses = 9
                 self.temp_time = '30'
                 self.guessed_letters = []
-                self.word_letters = MainWindow.get_characters()
-                self.guessed_word_letters = ['_' for i in MainWindow.get_word()]
+                self.word_letters = InfoDump().get_characters()
+                self.guessed_word_letters = ['_' for i in InfoDump().get_word()]
                 self.letter = ''
                 self.letters = ['a','b','c','d','e','f','g','h','i','j','k','l','m',
                            'n','o','p','q','r','s','t','u','v','w','x','y','z']
@@ -435,14 +412,15 @@ class GameWindow:
 
                 # Defining some variables
                 indices = []
-                wrd_chars = MainWindow.get_characters()
+                wrd_chars = InfoDump().get_characters()
+                self.games = InfoDump().get_games()
 
                 # Variables for game stats
                 self.game_num = 0
                 self.time_taken = 0
                 self.guesses_used = 0
                 self.win_loss = ''
-                self.phrase = MainWindow.get_word()
+                self.phrase = InfoDump().get_word()
                 self.game_stats = []
 
 
@@ -515,10 +493,9 @@ class GameWindow:
                 self.game_stats.append(str(self.guesses_used))
 
                 self.games.append(self.game_stats)
-                GameWindow.games = self.games
 
-        def get_games(self):
-                return GameWindow.games
+                # Send the games through to the main class
+                InfoDump.games = self.games
 
         def close_game(self,partner):
 
@@ -527,6 +504,7 @@ class GameWindow:
                 self.game_box.destroy()
 
 class GameStatistics:
+
         def __init__(self,partner):
 
                 #self.games = [['1','Tomato','Win','20','5'],['2','Orange','Loss','70','6']]
@@ -599,6 +577,35 @@ class GameStatistics:
                         self.game_label = Label(self.statistics_frame,font='Arial 10',text=(sorted(self.games, key=lambda values: values[4])[rownum]))
                         self.game_label.grid(row=rownum)
                         rownum += 1
+
+class InfoDump():
+
+        word = ''
+        characters = []
+        games = []
+        wordlist = []
+        wordlist_key = ''
+
+        def  __init__(self):
+                print('Initialzing')
+
+        def get_wordlist(self):
+                return InfoDump.wordlist
+
+        def get_wordlist_key(self):
+                return InfoDump.wordlist_key
+
+        def get_word(self):
+                return InfoDump.word
+
+        def get_games(self):
+                return InfoDump.games
+
+        def get_characters(self):
+                return InfoDump.characters
+
+
+
 
 if __name__ == "__main__":
         root = Tk()
