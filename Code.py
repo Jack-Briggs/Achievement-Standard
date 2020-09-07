@@ -14,7 +14,6 @@ import glob
 import os
 
 class MainWindow:
-
         def __init__(self,partner):
 
                 # Setting variables
@@ -431,12 +430,14 @@ class GameWindow:
                         letter = n
                         bname.config(state=DISABLED)
 
+                        # if correct guess don't subtract one
+                        if letter in wrd_chars:
+                                self.temp_guesses += 1
 
                         # Get the index positions of the letter in the word
                         for i in range(len(wrd_chars)):
                                 if wrd_chars[i] == letter:
                                         indices.append(i)
-
 
                         # Replace the hidden letters on the display with
                         # correctly guessed letters
@@ -448,7 +449,7 @@ class GameWindow:
                 # Adding the guessed letter to a list
                 # Updating the label
                 self.guessed_letters.append(letter)
-                self.guessed_label.configure(text='Letters Guessed:\n'+str(self.guessed_letters))
+                self.guessed_label.configure(text=self.temp_guesses)
 
                 # check if the player has won
                 # if the player has guesses, lower the guesses by 1
@@ -459,12 +460,12 @@ class GameWindow:
                         # If the user has guesses subtract one
                         if self.temp_guesses >0:
                                 self.temp_guesses -= 1
-                                self.guesses_label.configure(text=self.temp_guesses+1)
+                                self.guesses_label.configure(text="Guesses remaining: "+str(self.temp_guesses+1))
 
                         # if the user has no more guesses end the game,
                         elif self.temp_guesses == 0:
                                 self.temp_guesses = 0
-                                self.guesses_label.configure(text=self.temp_guesses)
+                                self.guesses_label.configure(text="Guesses remaining: "+str(self.temp_guesses))
 
                                 # disable the buttons on game end
                                 for bname in self.button_identities:
@@ -481,16 +482,17 @@ class GameWindow:
                         # if they win
                         self.win_loss = 'Win'
 
+                print(self.temp_guesses)
+
                 # Save the stats for this game
                 self.game_num += 1
                 self.time_taken = 0
-                self.guesses_used = 10-self.temp_guesses
 
                 self.game_stats.append(str(self.game_num))
                 self.game_stats.append(self.phrase)
                 self.game_stats.append(self.win_loss)
                 self.game_stats.append(str(self.time_taken))
-                self.game_stats.append(str(self.guesses_used))
+                self.game_stats.append(str(self.temp_guesses))
 
                 self.games.append(self.game_stats)
 
@@ -507,11 +509,17 @@ class GameStatistics:
 
         def __init__(self,partner):
 
-                #self.games = [['1','Tomato','Win','20','5'],['2','Orange','Loss','70','6']]
 
+                # Get the games
+                self.games = InfoDump().get_games()
+                print(InfoDump().get_games())
+                print(self.games)
+
+                # Stats box
+                self.stats_box = Toplevel()
 
                 # Master Frame
-                self.master_frame = Frame()
+                self.master_frame = Frame(self.stats_box)
                 self.master_frame.grid()
 
                 # Info Label
