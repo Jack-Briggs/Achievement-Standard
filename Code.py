@@ -2,6 +2,16 @@
 # Jack Briggs
 
 
+################################################################
+################################### TODO #######################
+# MAKE GUI LOOK NICE
+# CHARACTER LIMIT FOR CHOSEN WORD
+# ADD THE TIMER
+# FIX ALLOWING EMPTY WORDS
+# MAKE IT REVEAL WORD WHEN LOSE
+################################################################
+################################### TODO #######################
+
 # Importing librarys
 
 from tkinter import *
@@ -326,11 +336,24 @@ class GameWindow:
                 self.temp_guesses = 9
                 self.temp_time = '30'
                 self.guessed_letters = []
-                self.word_letters = InfoDump().get_characters()
-                self.guessed_word_letters = ['_' for i in InfoDump().get_word()]
+                self.word_chars = [i for i in InfoDump().get_word().lower()]
+                self.hidden_chars = []
                 self.letter = ''
                 self.letters = ['a','b','c','d','e','f','g','h','i','j','k','l','m',
                            'n','o','p','q','r','s','t','u','v','w','x','y','z']
+                self.serperator = ' '
+
+
+                # Logic to split the word into characters of
+                # _ for letters and spaces for space
+                for i in self.word_chars:
+                        index = self.word_chars.index(i)
+
+                        if self.word_chars[index] != ' ' :
+                                self.hidden_chars.append('_')
+
+                        elif self.word_chars[index] == ' ':
+                                self.hidden_chars.append(' ')
 
                 # Game Box
                 self.game_box = Toplevel()
@@ -350,7 +373,7 @@ class GameWindow:
 
                 # Display label (Phrase the game is using) (row 1)
                 self.word_label = Label(self.game_frame,font='Arial 20',text=
-                                        self.guessed_word_letters)
+                                        self.serperator.join(self.hidden_chars))
                 self.word_label.grid(row=1)
 
 
@@ -369,6 +392,10 @@ class GameWindow:
                 self.time_label = Label(self.info_frame,font='Arial 10',text=
                                         'Timer: '+self.temp_time)
                 self.time_label.grid(row=0,column=1)
+
+                # Win/Loss label (row 1)
+                self.win_loss_label = Label(self.info_frame,font='Arial 10',text='')
+                self.win_loss_label.grid(row=1)
 
 
                 # Alphabet buttons frame (row 3)
@@ -411,7 +438,6 @@ class GameWindow:
 
                 # Defining some variables
                 indices = []
-                wrd_chars = InfoDump().get_characters()
                 self.games = InfoDump().get_games()
 
                 # Variables for game stats
@@ -422,40 +448,40 @@ class GameWindow:
                 self.phrase = InfoDump().get_word()
                 self.game_stats = []
 
-
                 # Checks which button was pressed, stores the letter assigned,
                 # disables the button and checks if the letter is in the word,
                 # if the letter is in the word continue
+
                 if bname := (self.button_identities[self.letters.index(n)]):
                         letter = n
                         bname.config(state=DISABLED)
 
                         # if correct guess don't subtract one
-                        if letter in wrd_chars:
+                        if letter in self.word_chars:
                                 self.temp_guesses += 1
 
                         # Get the index positions of the letter in the word
-                        for i in range(len(wrd_chars)):
-                                if wrd_chars[i] == letter:
+                        for i in range(len(self.word_chars)):
+                                if self.word_chars[i] == letter:
                                         indices.append(i)
 
                         # Replace the hidden letters on the display with
                         # correctly guessed letters
                         for p in indices:
-                                self.guessed_word_letters[p] = letter
-                                self.word_label.configure(text=self.guessed_word_letters)
+                                self.hidden_chars[p] = letter
+                                self.word_label.configure(text=self.serperator.join(self.hidden_chars))
 
 
                 # Adding the guessed letter to a list
                 # Updating the label
                 self.guessed_letters.append(letter)
-                self.guessed_label.configure(text=self.temp_guesses)
+                self.guessed_label.configure(text=self.guessed_letters)
 
                 # check if the player has won
                 # if the player has guesses, lower the guesses by 1
                 # update the image coresponding to the guess
 
-                if '_' in self.guessed_word_letters:
+                if '_' in self.hidden_chars:
 
                         # If the user has guesses subtract one
                         if self.temp_guesses >0:
@@ -473,6 +499,8 @@ class GameWindow:
 
                                 # If they lost
                                 self.win_loss = 'Loss'
+                                self.win_loss_label.configure(text='Game Over')
+                                self.history_calcs()
 
                 else:
                         # Disable the buttons on game end
@@ -481,6 +509,10 @@ class GameWindow:
 
                         # if they win
                         self.win_loss = 'Win'
+                        self.win_loss_label.configure(text='You won!')
+                        self.history_calcs()
+
+        def history_calcs(self):
 
                 print(self.temp_guesses)
 
@@ -489,7 +521,7 @@ class GameWindow:
                 self.time_taken = 0
 
                 self.game_stats.append(str(self.game_num))
-                self.game_stats.append(self.phrase)
+                self.game_stats.append(str(self.phrase))
                 self.game_stats.append(self.win_loss)
                 self.game_stats.append(str(self.time_taken))
                 self.game_stats.append(str(self.temp_guesses))
@@ -503,7 +535,9 @@ class GameWindow:
 
                 partner.chosen_button.config(state=NORMAL)
                 partner.random_button.config(state=NORMAL)
+
                 self.game_box.destroy()
+
 
 class GameStatistics:
 
@@ -512,6 +546,7 @@ class GameStatistics:
 
                 # Get the games
                 self.games = InfoDump().get_games()
+                #self.games = [['2','Word','Win','30','5'],['1','Apple','Loss','10','10']]
                 print(InfoDump().get_games())
                 print(self.games)
 
@@ -590,12 +625,9 @@ class InfoDump():
 
         word = ''
         characters = []
-        games = []
+        games = [['2','Word','Win','30','5'],['1','Apple','Loss','10','10']]
         wordlist = []
         wordlist_key = ''
-
-        def  __init__(self):
-                print('Initialzing')
 
         def get_wordlist(self):
                 return InfoDump.wordlist
