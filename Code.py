@@ -5,10 +5,11 @@
 ################################################################
 ################################### TODO #######################
 # MAKE GUI LOOK NICE
-# CHARACTER LIMIT FOR CHOSEN WORD
-# ADD THE TIMER
-# FIX ALLOWING EMPTY WORDS
-# MAKE IT REVEAL WORD WHEN LOSE
+# -- DONE -- CHARACTER LIMIT FOR CHOSEN WORD
+# -- DONE -- ADD THE TIMER
+# -- DONE -- FIX ALLOWING EMPTY WORDS
+# -- DONE -- MAKE IT REVEAL WORD WHEN LOSE
+# -- DONE -- ADD FILE EXPORT FOR STATS
 ################################################################
 ################################### TODO #######################
 
@@ -18,8 +19,7 @@ from tkinter import *
 from functools import partial
 from random import randint
 from PIL import Image, ImageTk
-#import time
-#import numpy
+import time
 import glob
 import os
 
@@ -28,10 +28,11 @@ class MainWindow:
 
                 # Setting variables
                 self.allowed_characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ '
+                self.instructions_text = '''Welcome to Hangman. If you would like to import a custom set of phrases or words, press the 'Import Wordlist' button. The game will use the default list automatically. If you would like to see your game statistics for this session press the 'Game History' button, you can also export your statistics to a text file from that window if you would like. Press the 'Random Word' button to start a game using a word from the current wordlist. Press the 'Chosen Word' to create a game using a word you have entered.'''
 
 
                 # Creating the frame for the window
-                self.main_frame = Frame(width=1024, height=728, bg='white',
+                self.main_frame = Frame(width=1024, height=728, bg='grey',
                                         pady=10,padx=10)
                 self.main_frame.grid()
 
@@ -39,23 +40,23 @@ class MainWindow:
                 # Creating heading label      (row 0)
                 # Creating instructions label (row 1)
                 self.heading_label = Label(self.main_frame,
-                                           width=50, bg='pink',
+                                           width=50, bg='grey',
                                            text='Hangman Game',
                                            font='Candara 16 bold',pady=10,
                                            padx=10)
                 self.heading_label.grid(row=0)
 
                 self.instructions_label = Label(self.main_frame,
-                                                bg='red', width=70,
+                                                bg='grey', width=70,
                                                 wrap=600, text=
-'''Welcome to Hangman. If you would like to import a custom set of phrases or words, press the 'Import Wordlist' button. The game will use the default list automatically. If you would like to see your game statistics for this session press the 'Game History' button, you can also export your statistics to a text file from that window if you would like. Press the 'Random Word' button to start a game using a word from the current wordlist. Press the 'Chosen Word' to create a game using a word you have entered.''',
+                                                self.instructions_text,
                                                 font='Arial 12', justify=LEFT,
                                                 pady=10, padx=10)
                 self.instructions_label.grid(row=1)
 
 
                 # Buttons frame (row 2)
-                self.buttons_frame = Frame(self.main_frame, pady=10, bg='green')
+                self.buttons_frame = Frame(self.main_frame, pady=10, bg='grey')
                 self.buttons_frame.grid(row=3)
 
 
@@ -102,6 +103,7 @@ class MainWindow:
 
                 if len(InfoDump().get_games()) >0:
                         GameStatistics(self)
+                        self.instructions_label.configure(text=self.instructions_text)
 
                 else:
                         self.instructions_label.configure(text='You have not played any games!\nThere are no statistics avaliable.')
@@ -167,7 +169,8 @@ class MainWindow:
 
 
                 # If the entry is not alphabetical ask for another entry.
-                if all(char in self.allowed_characters for char in InfoDump.word):
+                # If the entry is blank or has too many characters ask again.
+                if all(char in self.allowed_characters for char in InfoDump.word) and len(InfoDump.characters) <= 30 and len(InfoDump.characters) != 0:
 
                         # Remove the window and start the game
                         self.entry_box.protocol('WM_DELETE_WINDOW')
@@ -176,7 +179,7 @@ class MainWindow:
 
                 else:
 
-                        self.entry_label.configure(text='Enter a word',fg='red')
+                        self.entry_label.configure(text='Enter a word under 30 characters in length.',fg='red')
 
 
 
@@ -333,8 +336,9 @@ class GameWindow:
         def __init__(self,partner):
 
                 # Vars
+                self.timecheck = 0
                 self.temp_guesses = 9
-                self.temp_time = '30'
+                self.time_taken = 0
                 self.guessed_letters = []
                 self.word_chars = [i for i in InfoDump().get_word().lower()]
                 self.hidden_chars = []
@@ -354,6 +358,7 @@ class GameWindow:
 
                         elif self.word_chars[index] == ' ':
                                 self.hidden_chars.append(' ')
+
 
                 # Game Box
                 self.game_box = Toplevel()
@@ -390,17 +395,20 @@ class GameWindow:
 
                 # Time taken label (row 0, column 1)
                 self.time_label = Label(self.info_frame,font='Arial 10',text=
-                                        'Timer: '+self.temp_time)
+                                        'Timer: '+str(self.time_taken))
                 self.time_label.grid(row=0,column=1)
 
+
                 # Win/Loss label (row 1)
-                self.win_loss_label = Label(self.info_frame,font='Arial 10',text='')
+                self.win_loss_label = Label(self.info_frame,font='Arial 24',text='')
                 self.win_loss_label.grid(row=1)
 
 
                 # Alphabet buttons frame (row 3)
                 self.alphabet_frame = Frame(self.game_frame)
                 self.alphabet_frame.grid(row=3)
+
+
                 # For each letter add a button to the GUI
                 # Get the keynames for each list
                 rownum=0
@@ -433,6 +441,29 @@ class GameWindow:
                 self.game_box.protocol('WM_DELETE_WINDOW',partial(
                                         self.close_game,partner))
 
+
+                # Run the timer function and start the timer
+                self.start = time.time()
+                self.update_clock()
+
+        def update_clock(self):
+
+                # Count up 1 second
+                self.end = time.time()
+                self.time_taken = int(self.end-self.start)
+                self.temptime = self.time_taken
+
+
+                # Keep running the clock if the game is still going
+                if self.timecheck != 1:
+                        self.game_box.after(1000, self.update_clock)
+
+                else:
+                        self.time_taken -= 1
+
+
+                # Update the label
+                self.time_label.configure(text='Timer: '+str(self.time_taken))
 
         def run_checks(self,n):
 
@@ -500,6 +531,8 @@ class GameWindow:
                                 # If they lost
                                 self.win_loss = 'Loss'
                                 self.win_loss_label.configure(text='Game Over')
+                                self.word_label.configure(text=self.word_chars)
+                                self.timecheck = 1
                                 self.history_calcs()
 
                 else:
@@ -510,26 +543,26 @@ class GameWindow:
                         # if they win
                         self.win_loss = 'Win'
                         self.win_loss_label.configure(text='You won!')
+                        self.timecheck = 1
                         self.history_calcs()
 
         def history_calcs(self):
 
-                print(self.temp_guesses)
-
                 # Save the stats for this game
+                self.game_num = InfoDump.gamenum
                 self.game_num += 1
-                self.time_taken = 0
 
                 self.game_stats.append(str(self.game_num))
                 self.game_stats.append(str(self.phrase))
                 self.game_stats.append(self.win_loss)
-                self.game_stats.append(str(self.time_taken))
+                self.game_stats.append(str(self.temptime))
                 self.game_stats.append(str(self.temp_guesses))
 
                 self.games.append(self.game_stats)
 
                 # Send the games through to the main class
                 InfoDump.games = self.games
+                InfoDump.gamenum = self.game_num
 
         def close_game(self,partner):
 
@@ -546,48 +579,62 @@ class GameStatistics:
 
                 # Get the games
                 self.games = InfoDump().get_games()
-                #self.games = [['2','Word','Win','30','5'],['1','Apple','Loss','10','10']]
-                print(InfoDump().get_games())
-                print(self.games)
+
 
                 # Stats box
                 self.stats_box = Toplevel()
+
 
                 # Master Frame
                 self.master_frame = Frame(self.stats_box)
                 self.master_frame.grid()
 
+
                 # Info Label
                 self.info_label = Label(self.master_frame,font='Arial 12',text='This is the statistics screen, it will display the games for the session.\nClick the buttons to re-order your games based on that setting.')
-                self.info_label.grid(row=1)
+                self.info_label.grid(row=1, pady=10)
+
 
                 #S Sorting Buttons Frame
                 self.sorting_buttons_frame = Frame(self.master_frame)
                 self.sorting_buttons_frame.grid(row=2)
 
+
                 # Sorting Buttons
                 self.phrase_button = Button(self.sorting_buttons_frame,font='Arial 12',text='Phrase',command=self.sort_word)
-                self.phrase_button.grid(row=0, column=0)
+                self.phrase_button.grid(row=0, column=0, padx=15)
 
                 self.win_loss_button = Button(self.sorting_buttons_frame,font='Arial 12',text='Win / Loss',command=self.sort_winloss)
-                self.win_loss_button.grid(row=0, column=1)
+                self.win_loss_button.grid(row=0, column=1, padx=15)
 
                 self.time_button = Button(self.sorting_buttons_frame,font='Arial 12',text='Time Taken',command=self.sort_time)
-                self.time_button.grid(row=0, column=2)
+                self.time_button.grid(row=0, column=2, padx=15)
 
                 self.guesses_button = Button(self.sorting_buttons_frame,font='Arial 12',text='Guesses Used',command=self.sort_guesses)
-                self.guesses_button.grid(row=0, column=3)
+                self.guesses_button.grid(row=0, column=3, padx=15)
+
 
                 # Stats Frame
                 self.statistics_frame = Frame(self.master_frame)
                 self.statistics_frame.grid(row=3)
 
+
                 # Displaying Games
                 rownum = 0
                 for game in self.games:
                         self.game_label = Label(self.statistics_frame,font='Arial 10',text=(sorted(self.games, key=lambda values: values[0])[rownum]))
-                        self.game_label.grid(row=rownum)
+                        self.game_label.grid(row=rownum,pady=2)
                         rownum += 1
+
+
+                # Export Button Frame
+                self.export_frame = Frame(self.master_frame)
+                self.export_frame.grid(row=4)
+
+
+                # Export Button
+                self.export_button = Button(self.export_frame,font='Arial 10',text='Export Stats',command=self.export_stats)
+                self.export_button.grid(row=0)
 
         def sort_word(self):
                 self.game_label.destroy
@@ -621,11 +668,25 @@ class GameStatistics:
                         self.game_label.grid(row=rownum)
                         rownum += 1
 
+        def export_stats(self):
+
+                with open('Gamestats.csv','w+') as file:
+                        file.write('Game Number, ')
+                        file.write('Phrase, ')
+                        file.write('Win/Loss, ')
+                        file.write('Time, ')
+                        file.write('Guesses Used')
+                        file.write('\n')
+                        for i in self.games:
+                                file.write(str(i))
+                                file.write('\n')
+
 class InfoDump():
 
+        gamenum = 0
         word = ''
         characters = []
-        games = [['2','Word','Win','30','5'],['1','Apple','Loss','10','10']]
+        games = []
         wordlist = []
         wordlist_key = ''
 
@@ -652,4 +713,3 @@ if __name__ == "__main__":
         root.title("Hangman Game")
         something = MainWindow(root)
         root.mainloop()
-
