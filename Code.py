@@ -2,16 +2,6 @@
 # Jack Briggs
 
 
-################################################################
-################################### TODO #######################
-# MAKE GUI LOOK NICE
-# -- DONE -- CHARACTER LIMIT FOR CHOSEN WORD
-# -- DONE -- ADD THE TIMER
-# -- DONE -- FIX ALLOWING EMPTY WORDS
-# -- DONE -- MAKE IT REVEAL WORD WHEN LOSE
-# -- DONE -- ADD FILE EXPORT FOR STATS
-################################################################
-################################### TODO #######################
 
 # Importing librarys
 
@@ -202,7 +192,7 @@ class WordlistWindow:
 
                 # Creating frame
                 self.wordlist_frame = Frame(self.wordlist_box, width=1000,
-                                            height=1000, bg='white',)
+                                            height=1000, bg='grey',)
                 self.wordlist_frame.grid()
 
 
@@ -217,14 +207,14 @@ class WordlistWindow:
                                                 font='Arial 10', text=
 '''Use the buttons below to select the list of phrases for the game to use when selecting a word. If you would like to add more lists then add text files to the same folder as the program, formatted in the same way as the other lists.'''
                                         , justify=LEFT, wrap=500,
-                                        padx=10,pady=10,)
+                                        padx=10,pady=10,bg='grey')
                 self.instructions_label.grid(row=0)
 
 
                 # Display the current wordlist for the program (row-1)
                 self.display_label = Label(self.wordlist_frame, font='Arial 10',
                                            fg='red', text='Current Wordlist: '+
-                                           str(InfoDump.wordlist_key), pady=10, bg='white')
+                                           str(InfoDump.wordlist_key), pady=10, bg='grey')
                 self.display_label.grid(row=1)
 
 
@@ -245,7 +235,7 @@ class WordlistWindow:
 
                 # GUI Frame for imported lists (row=2)
                 self.wordlist_import_frame = Frame(self.wordlist_frame, width=
-                                                   600, height=600, pady=10)
+                                                   600, height=600, pady=10,bg='grey')
                 self.wordlist_import_frame.grid(row=2)
 
 
@@ -256,7 +246,7 @@ class WordlistWindow:
                 self.keynames = []
                 for i in range(len(self.lists_dict.keys())):
                         # creating the buttons, assigning a unique argument (i) to run the function (find_button)
-                        button = Button(self.wordlist_import_frame, width=60, text=str([key for key in self.lists_dict.keys()][i]), command=partial(self.find_button, i))
+                        button = Button(self.wordlist_import_frame, width=60, text=str([key for key in self.lists_dict.keys()][i]), bg='grey',command=partial(self.find_button, i))
                         rownum+=1
                         button.grid(row=rownum)
                         # add the button's identity to a list:
@@ -346,7 +336,7 @@ class GameWindow:
                 self.letters = ['a','b','c','d','e','f','g','h','i','j','k','l','m',
                            'n','o','p','q','r','s','t','u','v','w','x','y','z']
                 self.serperator = ' '
-
+                self.img_counter = 0
 
                 # Logic to split the word into characters of
                 # _ for letters and spaces for space
@@ -366,47 +356,50 @@ class GameWindow:
 
                 # Game Frame
                 self.game_frame = Frame(self.game_box,width=800,height=800,
-                                        bg='white')
+                                        bg='grey')
                 self.game_frame.grid()
+                
+                # Image Frame
+                self.image_frame = Frame(self.game_frame,bg='grey')
+                self.image_frame.grid(row=0,pady=100)
 
 
                 # Hangman picture (row 0)
-                self.img = ImageTk.PhotoImage(Image.open("test.png"))
-                self.game_image = Label(self.game_frame,image=self.img)
+                self.game_image = Label(self.image_frame,bg='grey')
                 self.game_image.grid(row=0)
 
 
-                # Display label (Phrase the game is using) (row 1)
+                # Display label (Phrase the game is using) (row 2)
                 self.word_label = Label(self.game_frame,font='Arial 20',text=
-                                        self.serperator.join(self.hidden_chars))
-                self.word_label.grid(row=1)
+                                        self.serperator.join(self.hidden_chars),bg='grey')
+                self.word_label.grid(row=2)
 
 
-                # Info frame (row 2, column 0)
-                self.info_frame = Frame(self.game_frame)
-                self.info_frame.grid(row=2)
+                # Info frame (row 3, column 0)
+                self.info_frame = Frame(self.game_frame,bg='grey')
+                self.info_frame.grid(row=3)
 
 
                 # Guesses used label (row 0, column 0)
                 self.guesses_label = Label(self.info_frame,font='Arial 10',text="Guesses remaining: "+
-                                           str(self.temp_guesses+1))
+                                           str(self.temp_guesses+1),bg='grey')
                 self.guesses_label.grid(row=0)
 
 
                 # Time taken label (row 0, column 1)
                 self.time_label = Label(self.info_frame,font='Arial 10',text=
-                                        'Timer: '+str(self.time_taken))
+                                        'Timer: '+str(self.time_taken),bg='grey')
                 self.time_label.grid(row=0,column=1)
 
 
                 # Win/Loss label (row 1)
-                self.win_loss_label = Label(self.info_frame,font='Arial 24',text='')
+                self.win_loss_label = Label(self.info_frame,font='Arial 24',text='',bg='grey')
                 self.win_loss_label.grid(row=1)
 
 
-                # Alphabet buttons frame (row 3)
-                self.alphabet_frame = Frame(self.game_frame)
-                self.alphabet_frame.grid(row=3)
+                # Alphabet buttons frame (row 4)
+                self.alphabet_frame = Frame(self.game_frame,bg='grey')
+                self.alphabet_frame.grid(row=4)
 
 
                 # For each letter add a button to the GUI
@@ -427,9 +420,9 @@ class GameWindow:
                         self.button_identities.append(button)
 
 
-                # Guessed letters area (Game Frame, row 4)
-                self.guessed_label = Label(self.game_frame,text='',font='Aral 10',pady=10)
-                self.guessed_label.grid(row=4)
+                # Guessed letters area (Game Frame, row 5)
+                self.guessed_label = Label(self.game_frame,text='',font='Aral 10',pady=10,bg='grey')
+                self.guessed_label.grid(row=5)
 
 
                 # Disabling menu buttons
@@ -470,6 +463,7 @@ class GameWindow:
                 # Defining some variables
                 indices = []
                 self.games = InfoDump().get_games()
+                
 
                 # Variables for game stats
                 self.game_num = 0
@@ -490,17 +484,55 @@ class GameWindow:
                         # if correct guess don't subtract one
                         if letter in self.word_chars:
                                 self.temp_guesses += 1
+                                
+                                # Get the index positions of the letter in the word
+                                for i in range(len(self.word_chars)):
+                                        if self.word_chars[i] == letter:
+                                                indices.append(i)
+        
+                                # Replace the hidden letters on the display with
+                                # correctly guessed letters
+                                for p in indices:
+                                        self.hidden_chars[p] = letter
+                                        self.word_label.configure(text=self.serperator.join(self.hidden_chars))                                
+                        
+                        else:
+                                self.img_counter = self.img_counter + 1
 
-                        # Get the index positions of the letter in the word
-                        for i in range(len(self.word_chars)):
-                                if self.word_chars[i] == letter:
-                                        indices.append(i)
 
-                        # Replace the hidden letters on the display with
-                        # correctly guessed letters
-                        for p in indices:
-                                self.hidden_chars[p] = letter
-                                self.word_label.configure(text=self.serperator.join(self.hidden_chars))
+                # Pure garbage.
+                # Checking which image to update to and then updating to it.
+                if self.img_counter == 1:
+                        self.img = ImageTk.PhotoImage(Image.open("1.png"))
+                        self.game_image.configure(image=self.img)                
+                elif self.img_counter == 2:
+                        self.img = ImageTk.PhotoImage(Image.open("2.png"))
+                        self.game_image.configure(image=self.img)
+                elif self.img_counter == 3:
+                        self.img = ImageTk.PhotoImage(Image.open("3.png"))
+                        self.game_image.configure(image=self.img)
+                elif self.img_counter == 4:
+                        self.img = ImageTk.PhotoImage(Image.open("4.png"))
+                        self.game_image.configure(image=self.img)
+                elif self.img_counter == 5:
+                        self.img = ImageTk.PhotoImage(Image.open("5.png"))
+                        self.game_image.configure(image=self.img)
+                elif self.img_counter == 6:
+                        self.img = ImageTk.PhotoImage(Image.open("6.png"))
+                        self.game_image.configure(image=self.img)
+                elif self.img_counter == 7:
+                        self.img = ImageTk.PhotoImage(Image.open("7.png"))
+                        self.game_image.configure(image=self.img)
+                elif self.img_counter == 8:
+                        self.img = ImageTk.PhotoImage(Image.open("8.png"))
+                        self.game_image.configure(image=self.img)
+                elif self.img_counter == 9:
+                        self.img = ImageTk.PhotoImage(Image.open("9.png"))
+                        self.game_image.configure(image=self.img)
+                elif self.img_counter == 10:
+                        self.img = ImageTk.PhotoImage(Image.open("10.png"))
+                        self.game_image.configure(image=self.img)                                
+                                        
 
 
                 # Adding the guessed letter to a list
@@ -636,6 +668,7 @@ class GameStatistics:
                 self.export_button = Button(self.export_frame,font='Arial 10',text='Export Stats',command=self.export_stats)
                 self.export_button.grid(row=0)
 
+                # Function to sort by the word the game was using
         def sort_word(self):
                 self.game_label.destroy
                 rownum = 0
@@ -644,6 +677,7 @@ class GameStatistics:
                         self.game_label.grid(row=rownum)
                         rownum += 1
 
+                # Function to sort by if the player won or lost
         def sort_winloss(self):
                 self.game_label.destroy
                 rownum = 0
@@ -651,7 +685,8 @@ class GameStatistics:
                         self.game_label = Label(self.statistics_frame,font='Arial 10',text=(sorted(self.games, key=lambda values: values[2],reverse=True)[rownum]))
                         self.game_label.grid(row=rownum)
                         rownum += 1
-
+                        
+                # Function to sort by how long the player took
         def sort_time(self):
                 self.game_label.destroy
                 rownum = 0
@@ -659,7 +694,8 @@ class GameStatistics:
                         self.game_label = Label(self.statistics_frame,font='Arial 10',text=(sorted(self.games, key=lambda values: values[3])[rownum]))
                         self.game_label.grid(row=rownum)
                         rownum += 1
-
+                        
+                # Function to sort by the amount of guesses used
         def sort_guesses(self):
                 self.game_label.destroy
                 rownum = 0
@@ -669,7 +705,8 @@ class GameStatistics:
                         rownum += 1
 
         def export_stats(self):
-
+                
+                # Create a CSV file then write to it each game in the list
                 with open('Gamestats.csv','w+') as file:
                         file.write('Game Number, ')
                         file.write('Phrase, ')
